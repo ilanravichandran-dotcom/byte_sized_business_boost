@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Byte-Sized Business Boost - Discover and support local small businesses in your community">
+    <title>Byte-Sized Business Boost - Local Business Discovery Tool</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">📍 Byte-Sized Business Boost</h1>
+            <p class="tagline">Discover and Support Local Small Businesses</p>
+        </div>
+    </header>
+
+    <!-- Main Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="#home" class="nav-link active" data-section="home">Home</a></li>
+                <li><a href="#browse" class="nav-link" data-section="browse">Browse Businesses</a></li>
+                <li><a href="#favorites" class="nav-link" data-section="favorites">My Favorites</a></li>
+                <li><a href="#deals" class="nav-link" data-section="deals">Special Deals</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Verification Modal (Bot Prevention) -->
+    <div id="verificationModal" class="modal">
+        <div class="modal-content">
+            <h2>🔒 Verification Required</h2>
+            <p>To prevent bot activity, please verify you're human:</p>
+            <div class="verification-box">
+                <p id="verificationQuestion" class="verification-question"></p>
+                <input type="text" id="verificationAnswer" class="verification-input" placeholder="Enter answer">
+                <button id="verifyBtn" class="btn btn-primary">Verify</button>
+                <p id="verificationError" class="error-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="container">
+                <div class="hero">
+                    <h2>Welcome to Byte-Sized Business Boost</h2>
+                    <p>Your local business discovery platform that helps you find, explore, and support small businesses in your community.</p>
+                </div>
+
+                <!-- Search and Filter Controls -->
+                <div class="controls-panel">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search businesses by name...">
+                        <button id="searchBtn" class="btn btn-secondary">Search</button>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="categoryFilter">Filter by Category:</label>
+                        <select id="categoryFilter" class="filter-select">
+                            <option value="all">All Categories</option>
+                            <option value="food">Food & Dining</option>
+                            <option value="retail">Retail & Shopping</option>
+                            <option value="services">Services</option>
+                        </select>
+                    </div>
+
+                    <div class="sort-group">
+                        <label for="sortBy">Sort by:</label>
+                        <select id="sortBy" class="filter-select">
+                            <option value="name">Name (A-Z)</option>
+                            <option value="rating-high">Rating (High to Low)</option>
+                            <option value="rating-low">Rating (Low to High)</option>
+                            <option value="reviews">Most Reviews</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Statistics Dashboard -->
+                <div class="stats-dashboard">
+                    <div class="stat-card">
+                        <h3 id="totalBusinesses">0</h3>
+                        <p>Total Businesses</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="avgRating">0.0</h3>
+                        <p>Average Rating</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalReviews">0</h3>
+                        <p>Total Reviews</p>
+                    </div>
+                </div>
+
+                <!-- Business Cards Container -->
+                <div id="businessList" class="business-list"></div>
+            </div>
+        </section>
+
+        <!-- Browse Section -->
+        <section id="browse" class="section">
+            <div class="container">
+                <h2>Browse All Businesses</h2>
+                <div id="browseBusinessList" class="business-list"></div>
+            </div>
+        </section>
+
+        <!-- Favorites Section -->
+        <section id="favorites" class="section">
+            <div class="container">
+                <h2>My Favorite Businesses</h2>
+                <div id="favoritesList" class="business-list">
+                    <p class="empty-message">No favorites yet. Start adding businesses you love!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Special Deals Section -->
+        <section id="deals" class="section">
+            <div class="container">
+                <h2>🎉 Special Deals & Coupons</h2>
+                <div id="dealsList" class="deals-list"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Business Detail Modal -->
+    <div id="businessModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <div id="businessModalContent"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Byte-Sized Business Boost. Supporting local businesses, one discovery at a time.</p>
+            <p class="footer-note">Built for FBLA Coding & Programming Competition 2025-2026</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
