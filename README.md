@@ -1,7 +1,4 @@
-# Byte-Sized Business Boost
 
-**FBLA Coding & Programming Competition 2025-2026**  
-**Topic: Byte-Sized Business Boost**
 
 A standalone web application designed to help users discover and support small, local businesses in their community. This tool enables users to explore businesses by category, read and write reviews, save favorites, and discover special deals and coupons.
 
@@ -510,7 +507,6 @@ This project aligns with:
 
 ---
 
-**Built with ❤️ for FBLA Coding & Programming Competition 2025-2026**
 
 *Topic: Byte-Sized Business Boost*  
 *Supporting local businesses, one discovery at a time.*
