@@ -1,0 +1,262 @@
+[
+  {
+    "id": 101,
+    "name": "Scooped Ice Cream & Gelato",
+    "category": "food",
+    "description": "Small homemade ice cream shop with many flavors and toppings.",
+    "address": "Media, PA",
+    "phone": "",
+    "rating": 4.6,
+    "reviews": [
+      {
+        "author": "A. Reviewer",
+        "rating": 5,
+        "comment": "This is a small cute homemade ice cream store. They had about 15 flavors and lots of toppings. The strawberry was creamy and full of flavor — highly recommend!",
+        "date": "2025-01-18"
+      },
+      {
+        "author": "Jordan P.",
+        "rating": 5,
+        "comment": "Great local place to check out - support local businesses like this one!",
+        "date": "2025-01-20"
+      },
+      {
+        "author": "Maya S.",
+        "rating": 4,
+        "comment": "Lovely selection and friendly staff, a bit pricey but worth it for homemade quality.",
+        "date": "2025-01-22"
+      }
+    ],
+    "deal": {
+      "title": "Buy One Get One Scoop",
+      "description": "Buy one single scoop, get a second scoop free (equal or lesser value).",
+      "code": "BOGO-SCOOP",
+      "expires": "2025-06-30"
+    }
+  },
+  {
+    "id": 102,
+    "name": "Earth & State",
+    "category": "retail",
+    "description": "Local arts & crafts store emphasizing community makers.",
+    "address": "Media, PA",
+    "phone": "",
+    "rating": 4.6,
+    "reviews": [
+      {
+        "author": "L. Carter",
+        "rating": 5,
+        "comment": "The owners are the epitome of awesome — hometown small business supporting local artists.",
+        "date": "2025-01-12"
+      },
+      {
+        "author": "Priya N.",
+        "rating": 4,
+        "comment": "Great selection and thoughtful curation. Cozy reading corner and friendly staff.",
+        "date": "2025-02-02"
+      }
+    ],
+    "deal": null
+  },
+  {
+    "id": 103,
+    "name": "Cork and Candles",
+    "category": "retail",
+    "description": "BYOB candle-making classes and creative events.",
+    "address": "King of Prussia, PA",
+    "phone": "",
+    "rating": 4.1,
+    "reviews": [
+      {
+        "author": "Olivia K.",
+        "rating": 5,
+        "comment": "I was excited to get started! Fun BYOB classes and you can order small bites while you create.",
+        "date": "2025-01-25"
+      },
+      {
+        "author": "Ben R.",
+        "rating": 4,
+        "comment": "Good experience for groups — well organized and creative.",
+        "date": "2025-02-05"
+      }
+    ],
+    "deal": null
+  },
+  {
+    "id": 104,
+    "name": "Napoletano Brothers",
+    "category": "food",
+    "description": "Family-run Italian kitchen known for authentic recipes and sandwiches.",
+    "address": "Springfield, PA",
+    "phone": "",
+    "rating": 4.8,
+    "reviews": [
+      {
+        "author": "Carla M.",
+        "rating": 5,
+        "comment": "Amazing authentic Italian food — a real neighborhood gem.",
+        "date": "2025-01-14"
+      },
+      {
+        "author": "Ethan G.",
+        "rating": 5,
+        "comment": "They are a business that helps make Springfield great.",
+        "date": "2025-01-16"
+      },
+      {
+        "author": "Nina S.",
+        "rating": 4,
+        "comment": "Great sandwiches and friendly staff, will come back for the pasta.",
+        "date": "2025-02-01"
+      }
+    ],
+    "deal": {
+      "title": "Neighborhood Pasta Night",
+      "description": "15% off all pasta dishes on Tuesdays (in-restaurant only).",
+      "code": "PASTA15",
+      "expires": "2025-08-31"
+    }
+  },
+  {
+    "id": 105,
+    "name": "Compendium Boutique",
+    "category": "retail",
+    "description": "Curated women's clothing and handmade accessories.",
+    "address": "Swarthmore, PA",
+    "phone": "",
+    "rating": 5.0,
+    "reviews": [
+      {
+        "author": "Sophie L.",
+        "rating": 5,
+        "comment": "What drew me in today was the sandwich board sign — lovely selection and helpful staff.",
+        "date": "2025-01-28"
+      }
+    ],
+    "deal": null
+  },
+  {
+    "id": 106,
+    "name": "320 Market Café",
+    "category": "food",
+    "description": "Cafe serving coffee, cheese, and light fare.",
+    "address": "Media, PA",
+    "phone": "",
+    "rating": 3.3,
+    "reviews": [
+      {
+        "author": "Trey H.",
+        "rating": 3,
+        "comment": "Probably will come back — there is a lot of potential here and I wish success for this small business.",
+        "date": "2025-01-10"
+      },
+      {
+        "author": "Megan R.",
+        "rating": 3,
+        "comment": "Nice spot but a few rough edges. Friendly staff though.",
+        "date": "2025-01-30"
+      },
+      {
+        "author": "Luis A.",
+        "rating": 4,
+        "comment": "Good coffee and atmosphere — try the cheese plates.",
+        "date": "2025-02-03"
+      }
+    ],
+    "deal": null
+  },
+  {
+    "id": 107,
+    "name": "Ennis Auto Tags and Notary",
+    "category": "services",
+    "description": "Registration services and notary; fast and friendly service.",
+    "address": "Chadds Ford, PA",
+    "phone": "",
+    "rating": 5.0,
+    "reviews": [
+      {
+        "author": "K. Allen",
+        "rating": 5,
+        "comment": "Excellent service, friendly, and efficient! Jackie was knowledgeable and very helpful.",
+        "date": "2025-01-20"
+      }
+    ],
+    "deal": null
+  },
+  {
+    "id": 108,
+    "name": "Sam & Sam Meats",
+    "category": "food",
+    "description": "Family-owned meat shop and local grocery.",
+    "address": "Upland, PA",
+    "phone": "",
+    "rating": 4.5,
+    "reviews": [
+      {
+        "author": "Olga T.",
+        "rating": 5,
+        "comment": "Family-owned and they really care about quality. Great cuts and friendly service.",
+        "date": "2025-01-21"
+      },
+      {
+        "author": "Derek P.",
+        "rating": 4,
+        "comment": "Fresh meats and helpful staff — will be back.",
+        "date": "2025-02-04"
+      }
+    ],
+    "deal": {
+      "title": "Weekend Savings",
+      "description": "10% off orders over $25 on weekends. Present code at checkout.",
+      "code": "WEEKEND10",
+      "expires": "2025-12-31"
+    }
+  },
+  {
+    "id": 109,
+    "name": "Together Skateboarding & Cafe",
+    "category": "food",
+    "description": "Skate shop combined with a friendly cafe and community space.",
+    "address": "Brewerytown, PA",
+    "phone": "",
+    "rating": 5.0,
+    "reviews": [
+      {
+        "author": "R. Thompson",
+        "rating": 5,
+        "comment": "Lovely little cafe, very friendly small business! Great vibe for skaters and coffee lovers.",
+        "date": "2025-01-19"
+      }
+    ],
+    "deal": null
+  },
+  {
+    "id": 110,
+    "name": "The Great Frame Up",
+    "category": "retail",
+    "description": "Custom framing and art services by local experts.",
+    "address": "Springfield, PA",
+    "phone": "",
+    "rating": 4.9,
+    "reviews": [
+      {
+        "author": "Hannah Q.",
+        "rating": 5,
+        "comment": "Incredibly talented framer — great customer service and attention to detail.",
+        "date": "2025-01-22"
+      },
+      {
+        "author": "Sam L.",
+        "rating": 5,
+        "comment": "Excellent work and helpful advice on preservation framing.",
+        "date": "2025-02-06"
+      }
+    ],
+    "deal": {
+      "title": "Frame & Save",
+      "description": "Free mounting with any custom framing order over $100.",
+      "code": "FRAMEFREE",
+      "expires": "2025-09-30"
+    }
+  }
+]

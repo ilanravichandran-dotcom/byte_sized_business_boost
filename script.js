@@ -5,7 +5,7 @@
  * This application helps users discover and support local small businesses.
  * Features include business listing, reviews, favorites, deals, and bot verification.
  * 
- * @author FBLA Coding & Programming Team
+ * @author Ilan Ravichandran, Prahast Pondugula, Daniel Li
  * @version 1.0.0
  */
 
@@ -20,6 +20,7 @@
 const AppData = {
     // Load data from localStorage or initialize with sample data
     businesses: [],
+    
     favorites: [],
     verified: false
 };
@@ -189,17 +190,37 @@ const SAMPLE_BUSINESSES = [
  * Initialize application data from localStorage
  * Falls back to sample data if no stored data exists
  */
-function initializeData() {
+async function initializeData() {
     const storedBusinesses = localStorage.getItem('businesses');
     const storedFavorites = localStorage.getItem('favorites');
-    
+
     if (storedBusinesses) {
         AppData.businesses = JSON.parse(storedBusinesses);
     } else {
-        AppData.businesses = JSON.parse(JSON.stringify(SAMPLE_BUSINESSES));
-        saveBusinesses();
+        // Try to load external data file if available (when served over HTTP)
+        let loaded = false;
+        try {
+            if (location && location.protocol && location.protocol.startsWith('http')) {
+                const resp = await fetch('data/businesses.json');
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        AppData.businesses = data;
+                        saveBusinesses();
+                        loaded = true;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Could not load external businesses.json:', e);
+        }
+
+        if (!loaded) {
+            AppData.businesses = JSON.parse(JSON.stringify(SAMPLE_BUSINESSES));
+            saveBusinesses();
+        }
     }
-    
+
     if (storedFavorites) {
         AppData.favorites = JSON.parse(storedFavorites);
     } else {
@@ -433,7 +454,7 @@ function renderBusinesses(businesses, containerId, showFavoriteButton = true) {
                         <span class="rating-count">(${reviewCount} review${reviewCount !== 1 ? 's' : ''})</span>
                     </div>
                     <p class="business-description">${escapeHtml(business.description)}</p>
-                    ${business.deal ? `<p style="color: var(--accent-color); font-weight: 600;">🎉 Special Deal Available!</p>` : ''}
+                    ${business.deal ? `<p style="color: var(--accent-color); font-weight: 600;">Special Deal Available!</p>` : ''}
                 </div>
                 <div class="business-card-footer" onclick="event.stopPropagation()">
                     <button class="btn btn-primary btn-small" onclick="openBusinessDetail(${business.id})">View Details</button>
@@ -477,16 +498,16 @@ function filterByCategory(category) {
  * @param {string} searchTerm - Search query
  * @returns {Array} Filtered business array
  */
-function searchBusinesses(searchTerm) {
+function searchBusinesses(searchTerm, businesses = AppData.businesses) {
     if (!searchTerm || searchTerm.trim() === '') {
-        return AppData.businesses;
+        return businesses;
     }
-    
+
     const term = searchTerm.toLowerCase().trim();
-    return AppData.businesses.filter(business => 
-        business.name.toLowerCase().includes(term) ||
-        business.description.toLowerCase().includes(term) ||
-        business.address.toLowerCase().includes(term)
+    return businesses.filter(business => 
+        (business.name && business.name.toLowerCase().includes(term)) ||
+        (business.description && business.description.toLowerCase().includes(term)) ||
+        (business.address && business.address.toLowerCase().includes(term))
     );
 }
 
@@ -538,7 +559,7 @@ function sortBusinesses(businesses, sortBy) {
  */
 function getFilteredBusinesses(category, searchTerm, sortBy) {
     let businesses = filterByCategory(category);
-    businesses = searchBusinesses(searchTerm);
+    businesses = searchBusinesses(searchTerm, businesses);
     businesses = sortBusinesses(businesses, sortBy);
     return businesses;
 }
@@ -991,20 +1012,20 @@ function setupEventListeners() {
 /**
  * Initialize the application when DOM is fully loaded
  */
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize data
-    initializeData();
-    
+document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize data (may load external JSON)
+    await initializeData();
+
     // Setup event listeners
     setupEventListeners();
-    
+
     // Initialize verification (will show modal if not verified)
     initVerification();
-    
+
     // Initial display
     updateBusinessList();
     updateDealsSection();
-    
+
     console.log('Byte-Sized Business Boost application initialized successfully!');
     console.log(`Loaded ${AppData.businesses.length} businesses`);
 });
