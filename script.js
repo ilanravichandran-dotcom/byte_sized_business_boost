@@ -189,17 +189,37 @@ const SAMPLE_BUSINESSES = [
  * Initialize application data from localStorage
  * Falls back to sample data if no stored data exists
  */
-function initializeData() {
+async function initializeData() {
     const storedBusinesses = localStorage.getItem('businesses');
     const storedFavorites = localStorage.getItem('favorites');
-    
+
     if (storedBusinesses) {
         AppData.businesses = JSON.parse(storedBusinesses);
     } else {
-        AppData.businesses = JSON.parse(JSON.stringify(SAMPLE_BUSINESSES));
-        saveBusinesses();
+        // Try to load external data file if available (when served over HTTP)
+        let loaded = false;
+        try {
+            if (location && location.protocol && location.protocol.startsWith('http')) {
+                const resp = await fetch('data/businesses.json');
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        AppData.businesses = data;
+                        saveBusinesses();
+                        loaded = true;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Could not load external businesses.json:', e);
+        }
+
+        if (!loaded) {
+            AppData.businesses = JSON.parse(JSON.stringify(SAMPLE_BUSINESSES));
+            saveBusinesses();
+        }
     }
-    
+
     if (storedFavorites) {
         AppData.favorites = JSON.parse(storedFavorites);
     } else {
@@ -991,20 +1011,20 @@ function setupEventListeners() {
 /**
  * Initialize the application when DOM is fully loaded
  */
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize data
-    initializeData();
-    
+document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize data (may load external JSON)
+    await initializeData();
+
     // Setup event listeners
     setupEventListeners();
-    
+
     // Initialize verification (will show modal if not verified)
     initVerification();
-    
+
     // Initial display
     updateBusinessList();
     updateDealsSection();
-    
+
     console.log('Byte-Sized Business Boost application initialized successfully!');
     console.log(`Loaded ${AppData.businesses.length} businesses`);
 });
