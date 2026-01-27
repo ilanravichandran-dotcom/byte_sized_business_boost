@@ -586,12 +586,10 @@ body {
 }
 
 .deal-card::before {
-    content: '🎉';
+    content: '';
     position: absolute;
     top: 1rem;
     right: 1rem;
-    font-size: 3rem;
-    opacity: 0.3;
 }
 
 .deal-business {

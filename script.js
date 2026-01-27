@@ -433,7 +433,7 @@ function renderBusinesses(businesses, containerId, showFavoriteButton = true) {
                         <span class="rating-count">(${reviewCount} review${reviewCount !== 1 ? 's' : ''})</span>
                     </div>
                     <p class="business-description">${escapeHtml(business.description)}</p>
-                    ${business.deal ? `<p style="color: var(--accent-color); font-weight: 600;">🎉 Special Deal Available!</p>` : ''}
+                    ${business.deal ? `<p style="color: var(--accent-color); font-weight: 600;">Special Deal Available!</p>` : ''}
                 </div>
                 <div class="business-card-footer" onclick="event.stopPropagation()">
                     <button class="btn btn-primary btn-small" onclick="openBusinessDetail(${business.id})">View Details</button>
