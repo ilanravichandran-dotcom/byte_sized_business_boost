@@ -27,7 +27,12 @@
         "date": "2025-01-22"
       }
     ],
-    "deal": null
+    "deal": {
+      "title": "Buy One Get One Scoop",
+      "description": "Buy one single scoop, get a second scoop free (equal or lesser value).",
+      "code": "BOGO-SCOOP",
+      "expires": "2025-06-30"
+    }
   },
   {
     "id": 102,
@@ -105,7 +110,12 @@
         "date": "2025-02-01"
       }
     ],
-    "deal": null
+    "deal": {
+      "title": "Neighborhood Pasta Night",
+      "description": "15% off all pasta dishes on Tuesdays (in-restaurant only).",
+      "code": "PASTA15",
+      "expires": "2025-08-31"
+    }
   },
   {
     "id": 105,
@@ -195,7 +205,12 @@
         "date": "2025-02-04"
       }
     ],
-    "deal": null
+    "deal": {
+      "title": "Weekend Savings",
+      "description": "10% off orders over $25 on weekends. Present code at checkout.",
+      "code": "WEEKEND10",
+      "expires": "2025-12-31"
+    }
   },
   {
     "id": 109,
@@ -237,6 +252,11 @@
         "date": "2025-02-06"
       }
     ],
-    "deal": null
+    "deal": {
+      "title": "Frame & Save",
+      "description": "Free mounting with any custom framing order over $100.",
+      "code": "FRAMEFREE",
+      "expires": "2025-09-30"
+    }
   }
 ]

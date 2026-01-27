@@ -5,7 +5,7 @@
  * This application helps users discover and support local small businesses.
  * Features include business listing, reviews, favorites, deals, and bot verification.
  * 
- * @author FBLA Coding & Programming Team
+ * @author Ilan Ravichandran, Prahast Pondugula, Daniel Li
  * @version 1.0.0
  */
 
@@ -20,6 +20,7 @@
 const AppData = {
     // Load data from localStorage or initialize with sample data
     businesses: [],
+    
     favorites: [],
     verified: false
 };
@@ -497,16 +498,16 @@ function filterByCategory(category) {
  * @param {string} searchTerm - Search query
  * @returns {Array} Filtered business array
  */
-function searchBusinesses(searchTerm) {
+function searchBusinesses(searchTerm, businesses = AppData.businesses) {
     if (!searchTerm || searchTerm.trim() === '') {
-        return AppData.businesses;
+        return businesses;
     }
-    
+
     const term = searchTerm.toLowerCase().trim();
-    return AppData.businesses.filter(business => 
-        business.name.toLowerCase().includes(term) ||
-        business.description.toLowerCase().includes(term) ||
-        business.address.toLowerCase().includes(term)
+    return businesses.filter(business => 
+        (business.name && business.name.toLowerCase().includes(term)) ||
+        (business.description && business.description.toLowerCase().includes(term)) ||
+        (business.address && business.address.toLowerCase().includes(term))
     );
 }
 
@@ -558,7 +559,7 @@ function sortBusinesses(businesses, sortBy) {
  */
 function getFilteredBusinesses(category, searchTerm, sortBy) {
     let businesses = filterByCategory(category);
-    businesses = searchBusinesses(searchTerm);
+    businesses = searchBusinesses(searchTerm, businesses);
     businesses = sortBusinesses(businesses, sortBy);
     return businesses;
 }
