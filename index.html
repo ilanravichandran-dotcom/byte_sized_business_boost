@@ -13,6 +13,11 @@
         <div class="container">
             <h1 class="logo">Byte-Sized Business Boost</h1>
             <p class="tagline">Discover and Support Local Small Businesses</p>
+            <div id="authArea" class="auth-area">
+                <span id="authUsername" class="auth-username"></span>
+                <button id="loginBtn" class="btn btn-secondary">Login</button>
+                <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Logout</button>
+            </div>
         </div>
     </header>
 
@@ -38,6 +43,20 @@
                 <input type="text" id="verificationAnswer" class="verification-input" placeholder="Enter answer">
                 <button id="verifyBtn" class="btn btn-primary">Verify</button>
                 <p id="verificationError" class="error-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2>Sign In</h2>
+            <p>Sign in to save and access your favorite businesses.</p>
+            <div class="login-box">
+                <input type="text" id="loginName" class="verification-input" placeholder="Your name">
+                <input type="email" id="loginEmail" class="verification-input" placeholder="Email address">
+                <p id="loginError" class="error-message"></p>
+                <button id="loginSubmitBtn" class="btn btn-primary">Sign In</button>
             </div>
         </div>
     </div>

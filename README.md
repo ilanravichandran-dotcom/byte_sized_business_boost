@@ -398,6 +398,54 @@ No browser detection is implemented. The application gracefully degrades if cert
 
 ---
 
+## Deployment & Database (Netlify + Postgres)
+
+This project can be deployed as a static site on Netlify with serverless functions backed by a Postgres database. The repository includes example Netlify Functions (Node.js + `pg`) and a migration runner to create the required tables.
+
+### Overview
+- Static frontend served by Netlify (this repo).
+- Serverless functions under `netlify/functions/` handle reviews and favorites and connect to an external Postgres database.
+- Migrations are in `migrations/` and can be applied with the provided Node runner.
+
+### Required steps before deployment
+1. Provision a Postgres database (Neon, Railway, Render, ElephantSQL, Heroku, etc.).
+2. In the Netlify Site settings add an Environment Variable named `DATABASE_URL` with the full Postgres connection string (do NOT commit this to source control).
+3. Ensure `pg` is installed (already in `package.json`). Netlify will run `npm install` automatically.
+
+### Migrations
+- Migrations are stored in `migrations/` and applied in order.
+- A migration runner is provided at `scripts/migrate.js`.
+
+Run migrations locally:
+```bash
+export DATABASE_URL="postgres://user:password@host:5432/dbname"
+npm install
+npm run migrate
+```
+
+### Netlify build behavior
+- Preview builds (PRs) use the normal `build` step and will NOT run migrations.
+- Production builds run `npm run prod-build`, which executes the migration runner before publishing. This behavior is defined in `netlify.toml`.
+
+### Health check
+A simple DB health endpoint is available at `/.netlify/functions/db-health` after deploy. Use it to verify connectivity:
+
+```
+https://<your-site>.netlify.app/.netlify/functions/db-health
+```
+
+### Environment variables to set on Netlify
+- `DATABASE_URL` — Postgres connection string for your database (required).
+
+### Notes and recommendations
+- Use a serverless-friendly Postgres provider (Neon) or a connection pooler (PgBouncer) to avoid connection exhaustion from serverless functions.
+- Do not commit secrets to the repository.
+- If you prefer not to run migrations during build, I can switch to an `onPostDeploy` hook or a Netlify Build Plugin to run migrations after deploy.
+
+---
+
+---
+
 ## Security & Privacy
 
 ### Bot Verification

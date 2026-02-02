@@ -1,0 +1,12 @@
+[build]
+  # Default build (preview and local) — does NOT run migrations
+  command = "npm run build"
+  publish = "."
+
+[context.production]
+  # Production builds run migrations first via `prod-build`
+  command = "npm run prod-build"
+
+[context.production.environment]
+  # DATABASE_URL must be set in Netlify site environment (do NOT commit here)
+  # DATABASE_URL = "postgres://user:pass@host:5432/dbname"

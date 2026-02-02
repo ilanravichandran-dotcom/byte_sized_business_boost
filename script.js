@@ -25,6 +25,9 @@ const AppData = {
     verified: false
 };
 
+// Current authenticated user (null when not signed in)
+AppData.currentUser = null;
+
 /**
  * Sample business data - in production, this would come from a database
  * This includes businesses from different categories with initial data
@@ -240,7 +243,126 @@ function saveBusinesses() {
  * Save favorites array to localStorage
  */
 function saveFavorites() {
-    localStorage.setItem('favorites', JSON.stringify(AppData.favorites));
+    // Save favorites per-user when signed in, otherwise fallback to generic favorites
+    if (AppData.currentUser && AppData.currentUser.email) {
+        localStorage.setItem(`favorites_${AppData.currentUser.email}`, JSON.stringify(AppData.favorites));
+    } else {
+        localStorage.setItem('favorites', JSON.stringify(AppData.favorites));
+    }
+}
+
+/**
+ * Load currently signed-in user from sessionStorage and populate favorites
+ */
+function loadCurrentUser() {
+    const email = sessionStorage.getItem('currentUserEmail');
+    if (email) {
+        const name = localStorage.getItem(`userName_${email}`) || '';
+        AppData.currentUser = { email, name };
+        // Try to load favorites from serverless function when available
+        fetch(`/.netlify/functions/get-favorites?user_email=${encodeURIComponent(email)}`)
+            .then(r => r.ok ? r.json() : Promise.resolve(JSON.parse(localStorage.getItem(`favorites_${email}`) || '[]')))
+            .then(ids => {
+                AppData.favorites = Array.isArray(ids) ? ids : JSON.parse(localStorage.getItem(`favorites_${email}`) || '[]');
+                updateAuthUI();
+                updateBusinessList();
+                updateFavoritesSection();
+            }).catch(() => {
+                AppData.favorites = JSON.parse(localStorage.getItem(`favorites_${email}`) || '[]');
+                updateAuthUI();
+                updateBusinessList();
+                updateFavoritesSection();
+            });
+        return;
+    } else {
+        AppData.currentUser = null;
+        // keep generic favorites if present (backwards compatibility)
+        const generic = JSON.parse(localStorage.getItem('favorites') || '[]');
+        AppData.favorites = generic;
+    }
+    updateAuthUI();
+}
+
+/**
+ * Show login modal
+ */
+function showLoginModal() {
+    const modal = document.getElementById('loginModal');
+    document.getElementById('loginError').textContent = '';
+    modal.classList.add('active');
+    document.getElementById('loginEmail').focus();
+}
+
+/**
+ * Attempt to sign in the user (simple email-based sign-in)
+ */
+function loginUser() {
+    const name = document.getElementById('loginName').value.trim();
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const errorEl = document.getElementById('loginError');
+
+    if (!validateEmail(email)) {
+        errorEl.textContent = 'Please enter a valid email address.';
+        return;
+    }
+    const nameValidation = validateText(name, 1, 50);
+    if (!nameValidation.isValid) {
+        errorEl.textContent = nameValidation.error;
+        return;
+    }
+
+    // Persist minimal user info and restore their favorites
+    sessionStorage.setItem('currentUserEmail', email);
+    localStorage.setItem(`userName_${email}`, name);
+    AppData.currentUser = { email, name };
+    document.getElementById('loginModal').classList.remove('active');
+    // Fetch server-side favorites if available
+    fetch(`/.netlify/functions/get-favorites?user_email=${encodeURIComponent(email)}`)
+        .then(r => r.ok ? r.json() : Promise.resolve(JSON.parse(localStorage.getItem(`favorites_${email}`) || '[]')))
+        .then(ids => {
+            AppData.favorites = Array.isArray(ids) ? ids : JSON.parse(localStorage.getItem(`favorites_${email}`) || '[]');
+            saveFavorites();
+            updateAuthUI();
+            updateBusinessList();
+            updateFavoritesSection();
+        }).catch(() => {
+            AppData.favorites = JSON.parse(localStorage.getItem(`favorites_${email}`) || '[]');
+            saveFavorites();
+            updateAuthUI();
+            updateBusinessList();
+            updateFavoritesSection();
+        });
+}
+
+/**
+ * Sign out current user
+ */
+function logoutUser() {
+    sessionStorage.removeItem('currentUserEmail');
+    AppData.currentUser = null;
+    AppData.favorites = [];
+    updateAuthUI();
+    updateBusinessList();
+    updateFavoritesSection();
+}
+
+/**
+ * Update header/auth UI to reflect sign-in state
+ */
+function updateAuthUI() {
+    const authUsername = document.getElementById('authUsername');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (AppData.currentUser) {
+        authUsername.textContent = `Signed in as ${AppData.currentUser.name}`;
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+    } else {
+        authUsername.textContent = '';
+        loginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+    }
 }
 
 /**
@@ -252,7 +374,7 @@ function calculateRating(reviews) {
     if (!reviews || reviews.length === 0) {
         return 0;
     }
-    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    const sum = reviews.reduce((acc, review) => acc + Number(review.rating || 0), 0);
     return Math.round((sum / reviews.length) * 10) / 10;
 }
 
@@ -262,8 +384,9 @@ function calculateRating(reviews) {
  * @returns {string} HTML string with star symbols
  */
 function getStarRating(rating) {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+    const num = Number(rating) || 0;
+    const fullStars = Math.floor(num);
+    const hasHalfStar = num % 1 >= 0.5;
     let stars = '★'.repeat(fullStars);
     if (hasHalfStar) stars += '½';
     stars += '☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0));
@@ -296,7 +419,8 @@ function validateEmail(email) {
  * @returns {boolean} True if valid rating
  */
 function validateRating(rating) {
-    return rating >= 1 && rating <= 5 && Number.isInteger(rating);
+    const num = Number(rating);
+    return Number.isInteger(num) && num >= 1 && num <= 5;
 }
 
 /**
@@ -609,24 +733,44 @@ function updateStatistics() {
  * @param {number} businessId - ID of the business
  */
 function toggleFavorite(businessId) {
+    // Require bot verification first
     if (!AppData.verified) {
         showVerificationModal();
         return;
     }
-    
-    const index = AppData.favorites.indexOf(businessId);
-    
-    if (index === -1) {
-        // Add to favorites
-        AppData.favorites.push(businessId);
-    } else {
-        // Remove from favorites
-        AppData.favorites.splice(index, 1);
+
+    // Require signed-in user to save favorites
+    if (!AppData.currentUser || !AppData.currentUser.email) {
+        showLoginModal();
+        return;
     }
-    
-    saveFavorites();
-    updateBusinessList();
-    updateFavoritesSection();
+
+    // Send toggle request to serverless function
+    fetch('/.netlify/functions/toggle-favorite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ business_id: businessId, user_email: AppData.currentUser.email })
+    }).then(resp => {
+        if (!resp.ok) throw new Error('Network response not ok');
+        return resp.json();
+    }).then(result => {
+        // Refresh favorites list from server
+        fetch(`/.netlify/functions/get-favorites?user_email=${encodeURIComponent(AppData.currentUser.email)}`)
+            .then(r => r.ok ? r.json() : Promise.resolve([]))
+            .then(ids => {
+                AppData.favorites = Array.isArray(ids) ? ids : [];
+                saveFavorites();
+                updateBusinessList();
+                updateFavoritesSection();
+            }).catch(err => {
+                console.error('get-favorites failed', err);
+                updateBusinessList();
+                updateFavoritesSection();
+            });
+    }).catch(err => {
+        console.error('toggle-favorite failed', err);
+        alert('Failed to update favorites');
+    });
 }
 
 /**
@@ -667,7 +811,7 @@ function updateFavoritesSection() {
  * Open business detail modal with full information
  * @param {number} businessId - ID of the business to display
  */
-function openBusinessDetail(businessId) {
+async function openBusinessDetail(businessId) {
     const business = AppData.businesses.find(b => b.id === businessId);
     
     if (!business) {
@@ -676,6 +820,19 @@ function openBusinessDetail(businessId) {
     }
     
     const modal = document.getElementById('businessModal');
+    // If signed in, fetch latest reviews from server to display authoritative data
+    if (AppData.currentUser && AppData.currentUser.email) {
+        try {
+            const resp = await fetch(`/.netlify/functions/get-reviews?business_id=${encodeURIComponent(businessId)}`);
+            if (resp.ok) {
+                const rows = await resp.json();
+                business.reviews = rows.map(r => ({ author: r.author, rating: r.rating, comment: r.comment, date: r.created_at ? r.created_at.split('T')[0] : new Date().toISOString().split('T')[0] }));
+                saveBusinesses();
+            }
+        } catch (e) {
+            console.error('Failed to fetch reviews', e);
+        }
+    }
     const content = document.getElementById('businessModalContent');
     const rating = calculateRating(business.reviews);
     const reviewCount = business.reviews ? business.reviews.length : 0;
@@ -774,6 +931,18 @@ function openBusinessDetail(businessId) {
     `;
     
     modal.classList.add('active');
+
+    // If user is signed in, prefill the review author and make it readonly
+    const authorInput = document.getElementById('reviewAuthor');
+    if (authorInput) {
+        if (AppData.currentUser && AppData.currentUser.name) {
+            authorInput.value = AppData.currentUser.name;
+            authorInput.setAttribute('readonly', 'readonly');
+        } else {
+            authorInput.removeAttribute('readonly');
+            authorInput.value = '';
+        }
+    }
 }
 
 /**
@@ -796,8 +965,15 @@ function submitReview(event, businessId) {
         return;
     }
     
-    const author = document.getElementById('reviewAuthor').value.trim();
-    const rating = parseInt(document.getElementById('reviewRating').value);
+    // Use signed-in user's name if available, otherwise use form input
+    let author = '';
+    if (AppData.currentUser && AppData.currentUser.name) {
+        author = AppData.currentUser.name.trim();
+    } else {
+        author = document.getElementById('reviewAuthor').value.trim();
+    }
+    const ratingRaw = document.getElementById('reviewRating').value;
+    const rating = Number.isInteger(parseInt(ratingRaw)) ? parseInt(ratingRaw) : NaN;
     const comment = document.getElementById('reviewComment').value.trim();
     
     // Clear previous error messages
@@ -855,20 +1031,69 @@ function submitReview(event, businessId) {
         date: new Date().toISOString().split('T')[0]
     };
     
-    business.reviews.push(newReview);
-    saveBusinesses();
-    
-    // Show success message
-    document.getElementById('reviewSubmitSuccess').textContent = 'Review submitted successfully!';
-    document.getElementById('reviewSubmitSuccess').classList.add('show');
-    
-    // Reset form
-    document.getElementById('reviewForm').reset();
-    
-    // Refresh business detail view
-    setTimeout(() => {
+    // If user is signed in, send review to serverless function and refresh from DB
+    if (AppData.currentUser && AppData.currentUser.email) {
+        fetch('/.netlify/functions/add-review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ business_id: businessId, author, rating, comment, user_email: AppData.currentUser.email })
+        }).then(res => {
+            if (!res.ok) throw new Error('Network response not ok');
+            return res.json();
+        }).then(row => {
+            // update local copy and refresh from DB
+            business.reviews = business.reviews || [];
+            business.reviews.unshift({ author: row.author, rating: row.rating, comment: row.comment, date: row.created_at ? row.created_at.split('T')[0] : new Date().toISOString().split('T')[0] });
+            saveBusinesses();
+            document.getElementById('reviewSubmitSuccess').textContent = 'Review submitted successfully!';
+            document.getElementById('reviewSubmitSuccess').classList.add('show');
+            document.getElementById('reviewForm').reset();
+            if (AppData.currentUser && AppData.currentUser.name) {
+                const authorInput = document.getElementById('reviewAuthor');
+                if (authorInput) {
+                    authorInput.value = AppData.currentUser.name;
+                    authorInput.setAttribute('readonly', 'readonly');
+                }
+            }
+            fetchReviewsAndRender(businessId);
+        }).catch(err => {
+            console.error('add-review failed', err);
+            alert('Failed to submit review');
+        });
+    } else {
+        business.reviews.push(newReview);
+        saveBusinesses();
+        document.getElementById('reviewSubmitSuccess').textContent = 'Review submitted successfully!';
+        document.getElementById('reviewSubmitSuccess').classList.add('show');
+        document.getElementById('reviewForm').reset();
+        if (AppData.currentUser && AppData.currentUser.name) {
+            const authorInput = document.getElementById('reviewAuthor');
+            if (authorInput) {
+                authorInput.value = AppData.currentUser.name;
+                authorInput.setAttribute('readonly', 'readonly');
+            }
+        }
         openBusinessDetail(businessId);
-    }, 1500);
+    }
+}
+
+/**
+ * Fetch reviews from serverless function and then re-render the business modal
+ */
+function fetchReviewsAndRender(businessId) {
+    fetch(`/.netlify/functions/get-reviews?business_id=${encodeURIComponent(businessId)}`)
+        .then(r => {
+            if (!r.ok) throw new Error('Network error');
+            return r.json();
+        })
+        .then(rows => {
+            const business = AppData.businesses.find(b => b.id === businessId);
+            if (business) {
+                business.reviews = rows.map(r => ({ author: r.author, rating: r.rating, comment: r.comment, date: r.created_at ? r.created_at.split('T')[0] : new Date().toISOString().split('T')[0] }));
+                saveBusinesses();
+                openBusinessDetail(businessId);
+            }
+        }).catch(err => console.error('fetchReviews failed', err));
 }
 
 /* ============================================
@@ -1003,6 +1228,22 @@ function setupEventListeners() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(updateBusinessList, 300);
     });
+
+    // Authentication buttons
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+    if (loginBtn) loginBtn.addEventListener('click', function(e) { e.preventDefault(); showLoginModal(); });
+    if (logoutBtn) logoutBtn.addEventListener('click', function(e) { e.preventDefault(); logoutUser(); });
+    if (loginSubmitBtn) loginSubmitBtn.addEventListener('click', function(e) { e.preventDefault(); loginUser(); });
+
+    // Close login modal when clicking outside
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+    }
 }
 
 /* ============================================
@@ -1015,6 +1256,9 @@ function setupEventListeners() {
 document.addEventListener('DOMContentLoaded', async function() {
     // Initialize data (may load external JSON)
     await initializeData();
+
+    // Load signed-in user and their favorites (if any)
+    loadCurrentUser();
 
     // Setup event listeners
     setupEventListeners();
