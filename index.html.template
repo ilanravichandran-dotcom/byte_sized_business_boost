@@ -141,8 +141,8 @@
     <!-- Supabase configuration: injected at build time from environment variables -->
     <!-- To use Supabase, set SUPABASE_URL and SUPABASE_ANON_KEY environment variables before building -->
     <script>
-        window.SUPABASE_URL = 'https://dsdamnjauahkozaybfxo.supabase.co' || '';
-        window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzZGFtbmphdWFoa296YXliZnhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzgxMjAsImV4cCI6MjA4Njk1NDEyMH0.cZjXVRh0o0fTfh8reoogeQV_aWWMWTgH7maSGS4ZA5M' || '';
+        window.SUPABASE_URL = '%%SUPABASE_URL%%' || '';
+        window.SUPABASE_ANON_KEY = '%%SUPABASE_ANON_KEY%%' || '';
     </script>
 
 
