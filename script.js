@@ -25,6 +25,99 @@ const AppData = {
     verified: false
 };
 
+// Supabase client (optional). If not configured, app will gracefully fall back to localStorage-only.
+let supabaseClient = null;
+// Per-client identifier so favorites can be tied to a user record in the DB (no auth required)
+function getClientId() {
+    let id = localStorage.getItem('bsbb_client_id');
+    if (!id) {
+        id = 'client_' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem('bsbb_client_id', id);
+    }
+    return id;
+}
+
+function initSupabase() {
+    try {
+        const url = window.SUPABASE_URL;
+        const key = window.SUPABASE_ANON_KEY;
+        // Accept common Supabase hostnames (supabase.co or supabase.com)
+        if (url && key && url.toLowerCase().includes('supabase') && key.length > 10 && window.supabase) {
+            supabaseClient = window.supabase.createClient(url, key);
+            console.log('Supabase initialized');
+        } else {
+            console.log('Supabase not configured — running in local-only mode');
+        }
+    } catch (e) {
+        console.warn('Supabase init failed', e);
+        supabaseClient = null;
+    }
+}
+
+/**
+ * Sync reviews and favorites from Supabase into local AppData (non-destructive merge)
+ */
+async function syncFromSupabase() {
+    if (!supabaseClient) return;
+
+    try {
+        // Fetch all reviews
+        const { data: reviews, error: reviewsErr } = await supabaseClient.from('reviews').select('*');
+        if (reviewsErr) throw reviewsErr;
+
+        // Merge reviews by business id
+        if (Array.isArray(reviews)) {
+            reviews.forEach(r => {
+                const biz = AppData.businesses.find(b => b.id === r.business_id);
+                if (biz) {
+                    biz.reviews = biz.reviews || [];
+                    // Avoid duplicates: based on author+date+comment
+                    const exists = biz.reviews.some(local => local.author === r.author && local.date === r.date && local.comment === r.comment);
+                    if (!exists) {
+                        biz.reviews.push({ author: r.author, rating: r.rating, comment: r.comment, date: r.date });
+                    }
+                }
+            });
+            saveBusinesses();
+        }
+
+        // Fetch favorites for this client
+        const clientId = getClientId();
+        const { data: favs, error: favErr } = await supabaseClient.from('favorites').select('*').eq('user_id', clientId);
+        if (favErr) throw favErr;
+
+        if (Array.isArray(favs)) {
+            AppData.favorites = favs.map(f => f.business_id);
+            saveFavorites();
+        }
+    } catch (e) {
+        console.warn('Error syncing with Supabase:', e.message || e);
+    }
+}
+
+async function saveReviewToSupabase(businessId, review) {
+    if (!supabaseClient) return;
+    try {
+        await supabaseClient.from('reviews').insert([{ business_id: businessId, author: review.author, rating: review.rating, comment: review.comment, date: review.date }]);
+    } catch (e) {
+        console.warn('Failed to save review to Supabase:', e.message || e);
+    }
+}
+
+async function syncFavoriteToSupabase(businessId, isFavorite) {
+    if (!supabaseClient) return;
+    const clientId = getClientId();
+    try {
+        if (isFavorite) {
+            await supabaseClient.from('favorites').upsert({ user_id: clientId, business_id: businessId }, { onConflict: ['user_id', 'business_id'] });
+        } else {
+            await supabaseClient.from('favorites').delete().match({ user_id: clientId, business_id: businessId });
+        }
+    } catch (e) {
+        console.warn('Failed to sync favorite to Supabase:', e.message || e);
+    }
+}
+
 /**
  * Sample business data - in production, this would come from a database
  * This includes businesses from different categories with initial data
@@ -195,20 +288,44 @@ async function initializeData() {
     const storedFavorites = localStorage.getItem('favorites');
 
     if (storedBusinesses) {
-        AppData.businesses = JSON.parse(storedBusinesses);
-    } else {
+        try {
+            const parsed = JSON.parse(storedBusinesses);
+            // If stored value is a non-empty array, use it; otherwise fall back to loading external/sample data
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                AppData.businesses = parsed;
+            } else {
+                // treat empty arrays or non-array stored values as missing so we load defaults
+                console.log('Stored businesses found but empty — loading defaults/external file');
+            }
+        } catch (e) {
+            console.warn('Failed to parse stored businesses, will load defaults', e);
+        }
+    }
+    if (!AppData.businesses || AppData.businesses.length === 0) {
         // Try to load external data file if available (when served over HTTP)
         let loaded = false;
         try {
             if (location && location.protocol && location.protocol.startsWith('http')) {
-                const resp = await fetch('data/businesses.json');
+                console.log('Attempting to fetch businesses.json via relative path');
+                let resp = await fetch('data/businesses.json');
+                if ((!resp || !resp.ok) && location.hostname) {
+                    // try absolute path as fallback
+                    const abs = `${location.protocol}//${location.host}/data/businesses.json`;
+                    console.log('Relative fetch failed, trying absolute path:', abs);
+                    resp = await fetch(abs);
+                }
                 if (resp && resp.ok) {
                     const data = await resp.json();
                     if (Array.isArray(data) && data.length > 0) {
                         AppData.businesses = data;
                         saveBusinesses();
                         loaded = true;
+                        console.log(`Loaded ${data.length} businesses from external JSON`);
+                    } else {
+                        console.log('External JSON loaded but empty or invalid');
                     }
+                } else {
+                    console.log('Could not fetch external businesses.json (no response or not ok)');
                 }
             }
         } catch (e) {
@@ -228,6 +345,7 @@ async function initializeData() {
         saveFavorites();
     }
 }
+
 
 /**
  * Save businesses array to localStorage
@@ -625,6 +743,9 @@ function toggleFavorite(businessId) {
     }
     
     saveFavorites();
+    // Attempt to sync favorite state to Supabase (non-blocking)
+    const isNowFavorite = AppData.favorites.indexOf(businessId) !== -1;
+    syncFavoriteToSupabase(businessId, isNowFavorite);
     updateBusinessList();
     updateFavoritesSection();
 }
@@ -788,7 +909,7 @@ function closeBusinessModal() {
  * @param {Event} event - Form submit event
  * @param {number} businessId - ID of the business being reviewed
  */
-function submitReview(event, businessId) {
+async function submitReview(event, businessId) {
     event.preventDefault();
     
     if (!AppData.verified) {
@@ -857,6 +978,8 @@ function submitReview(event, businessId) {
     
     business.reviews.push(newReview);
     saveBusinesses();
+    // Attempt to save the review to Supabase as well (non-blocking)
+    saveReviewToSupabase(businessId, newReview);
     
     // Show success message
     document.getElementById('reviewSubmitSuccess').textContent = 'Review submitted successfully!';
@@ -1015,6 +1138,10 @@ function setupEventListeners() {
 document.addEventListener('DOMContentLoaded', async function() {
     // Initialize data (may load external JSON)
     await initializeData();
+
+    // Initialize Supabase (if configured) and sync remote data
+    initSupabase();
+    await syncFromSupabase();
 
     // Setup event listeners
     setupEventListeners();

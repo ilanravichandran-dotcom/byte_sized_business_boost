@@ -1,0 +1,6 @@
+[build]
+  command = "npm run build"
+  publish = "/"
+
+# No functions for now (using Supabase directly). If you add Netlify functions,
+# set `functions = "netlify/functions"` and create that directory.
