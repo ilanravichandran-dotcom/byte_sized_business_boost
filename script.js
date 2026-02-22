@@ -5,7 +5,7 @@
  * This application helps users discover and support local small businesses.
  * Features include business listing, reviews, favorites, deals, and bot verification.
  * 
- * @author Ilan Ravichandran, Prahast Pondugula, Daniel Li
+ * @author Ilan Ravichandran, Prahast Pondugula
  * @version 1.0.0
  */
 
@@ -37,6 +37,11 @@ function getClientId() {
     return id;
 }
 
+/**
+ * Initialize Supabase client if environment variables are set (injected at build time)
+ * Checks for valid URL and key formats to avoid misconfiguration
+ * If not configured properly, app will run in local-only mode without errors
+ */
 function initSupabase() {
     try {
         const url = window.SUPABASE_URL;
@@ -94,7 +99,10 @@ async function syncFromSupabase() {
         console.warn('Error syncing with Supabase:', e.message || e);
     }
 }
-
+/***
+ * Save a new review to Supabase (non-blocking, best effort)
+ * If Supabase is not configured or fails, review will still be saved locally
+ */
 async function saveReviewToSupabase(businessId, review) {
     if (!supabaseClient) return;
     try {
