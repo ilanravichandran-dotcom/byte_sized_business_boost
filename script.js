@@ -2,7 +2,7 @@
  * Byte-Sized Business Boost - Main Application Script
  * Built for FBLA Coding & Programming Competition 2025-2026
  * 
- * This application helps users discover and support local small businesses.
+ * This application helps users review and discover local businesses in their community.
  * Features include business listing, reviews, favorites, deals, and bot verification.
  * 
  * @author Ilan Ravichandran, Prahast Pondugula
@@ -1089,6 +1089,282 @@ function showSection(sectionId) {
 }
 
 /* ============================================
+   REPORTING FUNCTIONALITY
+   ============================================ */
+
+/**
+ * Get filtered businesses based on report settings
+ * @returns {Array} Filtered business array
+ */
+function getReportFilters() {
+    const category = document.getElementById('reportCategory').value;
+    const ratingMin = parseFloat(document.getElementById('reportRatingMin').value) || 0;
+    const onlyFavorites = document.getElementById('reportOnlyFavorites').checked;
+    
+    let filtered = AppData.businesses;
+    
+    // Filter by category
+    if (category) {
+        filtered = filtered.filter(b => b.category === category);
+    }
+    
+    // Filter by minimum rating
+    filtered = filtered.filter(b => {
+        const rating = calculateRating(b.reviews);
+        return rating >= ratingMin;
+    });
+    
+    // Filter to only favorites
+    if (onlyFavorites) {
+        filtered = filtered.filter(b => AppData.favorites.includes(b.id));
+    }
+    
+    return filtered;
+}
+
+/**
+ * Get selected fields from checkboxes
+ * @returns {Array} Array of field names to include in report
+ */
+function getSelectedFields() {
+    const checkboxes = document.querySelectorAll('.field-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+/**
+ * Format business data for report based on selected fields
+ * @param {Object} business - Business object
+ * @param {Array} fields - Selected field names
+ * @returns {Object} Formatted business data
+ */
+function formatBusinessForReport(business, fields) {
+    const data = {};
+    const rating = calculateRating(business.reviews);
+    const reviewCount = business.reviews ? business.reviews.length : 0;
+    
+    fields.forEach(field => {
+        switch(field) {
+            case 'name':
+                data.name = business.name;
+                break;
+            case 'category':
+                data.category = business.category.charAt(0).toUpperCase() + business.category.slice(1);
+                break;
+            case 'address':
+                data.address = business.address;
+                break;
+            case 'phone':
+                data.phone = business.phone || 'N/A';
+                break;
+            case 'rating':
+                data.rating = rating.toFixed(1);
+                break;
+            case 'reviewCount':
+                data['Review Count'] = reviewCount;
+                break;
+            case 'description':
+                data.description = business.description;
+                break;
+            case 'deal':
+                data['Current Deal'] = business.deal ? business.deal.title : 'None';
+                break;
+        }
+    });
+    
+    return data;
+}
+
+/**
+ * Generate CSV content from filtered businesses
+ * @returns {string} CSV formatted content
+ */
+function generateCSVContent() {
+    const businesses = getReportFilters();
+    const fields = getSelectedFields();
+    
+    if (businesses.length === 0) {
+        alert('No businesses match your filter criteria.');
+        return null;
+    }
+    
+    if (fields.length === 0) {
+        alert('Please select at least one field to include in the report.');
+        return null;
+    }
+    
+    // Format all businesses
+    const formatted = businesses.map(b => formatBusinessForReport(b, fields));
+    
+    // Create CSV header
+    const headers = Object.keys(formatted[0]);
+    let csv = headers.map(h => `"${h}"`).join(',') + '\n';
+    
+    // Add data rows
+    csv += formatted.map(row => {
+        return headers.map(header => {
+            const value = row[header] || '';
+            // Escape quotes and handle commas in values
+            const escaped = String(value).replace(/"/g, '""');
+            return `"${escaped}"`;
+        }).join(',');
+    }).join('\n');
+    
+    return csv;
+}
+
+/**
+ * Download CSV file
+ */
+function downloadCSV() {
+    const csv = generateCSVContent();
+    
+    if (!csv) return;
+    
+    // Create blob and download
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LocalLens_Report_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+
+/**
+ * Generate HTML preview of the report
+ * @returns {string} HTML content for preview
+ */
+function generateReportHTML() {
+    const businesses = getReportFilters();
+    const fields = getSelectedFields();
+    
+    if (businesses.length === 0) {
+        return '<p class="empty-message">No businesses match your filter criteria.</p>';
+    }
+    
+    if (fields.length === 0) {
+        return '<p class="empty-message">Please select at least one field to include in the report.</p>';
+    }
+    
+    // Format businesses
+    const formatted = businesses.map(b => formatBusinessForReport(b, fields));
+    const headers = Object.keys(formatted[0]);
+    
+    // Create table
+    let html = '<table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">';
+    
+    // Header row
+    html += '<thead style="background-color: var(--primary-color); color: white;"><tr>';
+    headers.forEach(header => {
+        html += `<th style="padding: 0.75rem; text-align: left; border: 1px solid #ddd;">${escapeHtml(header)}</th>`;
+    });
+    html += '</tr></thead>';
+    
+    // Data rows
+    html += '<tbody>';
+    formatted.forEach((row, index) => {
+        const bgColor = index % 2 === 0 ? '#f9f9f9' : 'white';
+        html += `<tr style="background-color: ${bgColor};">`;
+        headers.forEach(header => {
+            const value = row[header] || '';
+            html += `<td style="padding: 0.75rem; border: 1px solid #ddd;">${escapeHtml(String(value))}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody>';
+    html += '</table>';
+    
+    // Add summary
+    html += `<div style="margin-top: 2rem; padding: 1rem; background-color: var(--light-gray); border-radius: 4px;">`;
+    html += `<p><strong>Total Businesses:</strong> ${businesses.length}</p>`;
+    
+    if (fields.includes('rating')) {
+        const avgRating = businesses.reduce((sum, b) => sum + calculateRating(b.reviews), 0) / businesses.length;
+        html += `<p><strong>Average Rating:</strong> ${avgRating.toFixed(1)}</p>`;
+    }
+    
+    if (fields.includes('reviewCount') || fields.includes('rating')) {
+        const totalReviews = businesses.reduce((sum, b) => sum + (b.reviews ? b.reviews.length : 0), 0);
+        html += `<p><strong>Total Reviews:</strong> ${totalReviews}</p>`;
+    }
+    
+    html += `<p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>`;
+    html += '</div>';
+    
+    return html;
+}
+
+/**
+ * Show report preview
+ */
+function previewReport() {
+    const preview = document.getElementById('reportPreview');
+    const content = document.getElementById('reportContent');
+    
+    content.innerHTML = generateReportHTML();
+    preview.style.display = 'block';
+    preview.scrollIntoView({ behavior: 'smooth' });
+}
+
+/**
+ * Print the report
+ */
+function printReport() {
+    const html = generateReportHTML();
+    
+    // Create a temporary print window
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>LocalLens Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: var(--primary-color); }
+                table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+                th { background-color: var(--primary-color); color: white; padding: 0.75rem; text-align: left; border: 1px solid #ddd; }
+                td { padding: 0.75rem; border: 1px solid #ddd; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .summary { margin-top: 2rem; padding: 1rem; background-color: #f0f0f0; border-radius: 4px; }
+                @media print { body { margin: 0; } }
+            </style>
+        </head>
+        <body>
+            <h1>LocalLens Business Report</h1>
+            <p><em>Generated: ${new Date().toLocaleString()}</em></p>
+            ${html}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 250);
+}
+
+/**
+ * Setup report event listeners
+ */
+function setupReportEventListeners() {
+    const generateCSVBtn = document.getElementById('generateCSVBtn');
+    const previewReportBtn = document.getElementById('previewReportBtn');
+    const printReportBtn = document.getElementById('printReportBtn');
+    
+    if (generateCSVBtn) {
+        generateCSVBtn.addEventListener('click', downloadCSV);
+    }
+    
+    if (previewReportBtn) {
+        previewReportBtn.addEventListener('click', previewReport);
+    }
+    
+    if (printReportBtn) {
+        printReportBtn.addEventListener('click', printReport);
+    }
+}
+
+/* ============================================
    EVENT LISTENERS SETUP
    ============================================ */
 
@@ -1134,6 +1410,9 @@ function setupEventListeners() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(updateBusinessList, 300);
     });
+    
+    // Setup report event listeners
+    setupReportEventListeners();
 }
 
 /* ============================================
@@ -1161,6 +1440,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     updateBusinessList();
     updateDealsSection();
 
-    console.log('Byte-Sized Business Boost application initialized successfully!');
+    console.log('LocalLens application initialized successfully!');
     console.log(`Loaded ${AppData.businesses.length} businesses`);
 });

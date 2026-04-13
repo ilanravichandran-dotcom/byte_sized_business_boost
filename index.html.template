@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Byte-Sized Business Boost - Discover and support local small businesses in your community">
-    <title>Byte-Sized Business Boost - Local Business Discovery Tool</title>
+    <meta name="description" content="LocalLens - Review and discover local businesses in your community">
+    <title>LocalLens</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Header Section -->
-    <header class="header">
+    <header class="header">                                                     
         <div class="container">
-            <h1 class="logo">Byte-Sized Business Boost</h1>
-            <p class="tagline">Discover and Support Local Small Businesses</p>
+            <h1 class="logo">LocalLens</h1>
+            <p class="tagline">Review and Discover Local Businesses</p>
         </div>
     </header>
 
@@ -24,6 +24,7 @@
                 <li><a href="#browse" class="nav-link" data-section="browse">Browse Businesses</a></li>
                 <li><a href="#favorites" class="nav-link" data-section="favorites">My Favorites</a></li>
                 <li><a href="#deals" class="nav-link" data-section="deals">Special Deals</a></li>
+                <li><a href="#reports" class="nav-link" data-section="reports">Reports</a></li>
             </ul>
         </div>
     </nav>
@@ -48,7 +49,7 @@
         <section id="home" class="section active">
             <div class="container">
                 <div class="hero">
-                    <h2>Welcome to Byte-Sized Business Boost </h2>
+                    <h2>Welcome to LocalLens</h2>
                     <p>Your local business discovery platform that helps you find, explore, and support small businesses in your community.</p>
                 </div>
 
@@ -67,7 +68,7 @@
                             <option value="retail">Retail & Shopping</option>
                             <option value="services">Services</option>
                         </select>
-                    </div>
+                    </div>   
 
                     <div class="sort-group">
                         <label for="sortBy">Sort by:</label>
@@ -126,6 +127,65 @@
                 <div id="dealsList" class="deals-list"></div>
             </div>
         </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="section">
+            <div class="container">
+                <h2>Generate Reports</h2>
+                <p>Customize and export business data for analysis</p>
+                
+                <div class="report-controls">
+                    <div class="filter-group">
+                        <h3>Filter Options</h3>
+                        <div class="filter-item">
+                            <label for="reportCategory">Category:</label>
+                            <select id="reportCategory">
+                                <option value="">All Categories</option>
+                                <option value="food">Food & Beverage</option>
+                                <option value="retail">Retail</option>
+                                <option value="services">Services</option>
+                                <option value="health">Health & Wellness</option>
+                                <option value="entertainment">Entertainment</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label for="reportRatingMin">Minimum Rating:</label>
+                            <input type="number" id="reportRatingMin" min="0" max="5" step="0.1" placeholder="0.0" value="">
+                        </div>
+                        <div class="filter-item">
+                            <label>
+                                <input type="checkbox" id="reportOnlyFavorites"> Only Favorites
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="field-selection">
+                        <h3>Select Fields to Include</h3>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" class="field-checkbox" value="name" checked> Business Name</label>
+                            <label><input type="checkbox" class="field-checkbox" value="category" checked> Category</label>
+                            <label><input type="checkbox" class="field-checkbox" value="address" checked> Address</label>
+                            <label><input type="checkbox" class="field-checkbox" value="phone" checked> Phone</label>
+                            <label><input type="checkbox" class="field-checkbox" value="rating" checked> Rating</label>
+                            <label><input type="checkbox" class="field-checkbox" value="reviewCount"> Review Count</label>
+                            <label><input type="checkbox" class="field-checkbox" value="description"> Description</label>
+                            <label><input type="checkbox" class="field-checkbox" value="deal"> Current Deal</label>
+                        </div>
+                    </div>
+
+                    <div class="report-actions">
+                        <button id="generateCSVBtn" class="btn btn-primary">📥 Download CSV</button>
+                        <button id="previewReportBtn" class="btn btn-secondary">👁️ Preview Report</button>
+                        <button id="printReportBtn" class="btn btn-secondary">🖨️ Print</button>
+                    </div>
+                </div>
+
+                <div id="reportPreview" class="report-preview" style="display: none;">
+                    <h3>Report Preview</h3>
+                    <div id="reportContent"></div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Business Detail Modal -->
@@ -149,9 +209,14 @@
     <!-- Supabase client (UMD) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
 
-    <script src="script.js"></script>
+    <script src="js/business-service.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/verification.js"></script>
+    <script src="js/report-generator.js"></script>
+    <script src="js/ui-renderer.js"></script>
+    <script src="js/app-state.js"></script>
     <footer class="site-footer">
-        <div class="container">Created by Ilan Ravichandran, Prahast Pondugula, Daniel Li</div>
+        <div class="container">Created by Ilan Ravichandran, Prahast Pondugula</div>
     </footer>
 </body>
 </html>
